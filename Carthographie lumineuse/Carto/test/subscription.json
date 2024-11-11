@@ -1,0 +1,136 @@
+{
+  "topicFilter": "esp32/pub",
+  "qos": 0,
+  "messages": [
+    {
+      "format": "json",
+      "topic": "esp32/pub",
+      "timestamp": 1707901525176,
+      "payload": {
+        "Date": "4.02.2024",
+        "Horaire": "10.05.23",
+        "longitude": 1.475154667,
+        "latitude": 43.56494017,
+        "luminosité": 1898
+      },
+      "qos": 0
+    },
+    {
+      "format": "json",
+      "topic": "esp32/pub",
+      "timestamp": 1707901525057,
+      "payload": {
+        "Date": "4.02.2024",
+        "Horaire": "10.05.23",
+        "longitude": 1.475154667,
+        "latitude": 43.56494017,
+        "luminosité": 1666
+      },
+      "qos": 0
+    },
+    {
+      "format": "json",
+      "topic": "esp32/pub",
+      "timestamp": 1707901524948,
+      "payload": {
+        "Date": "4.02.2024",
+        "Horaire": "10.05.23",
+        "longitude": 1.475154667,
+        "latitude": 43.56494017,
+        "luminosité": 1698
+      },
+      "qos": 0
+    },
+    {
+      "format": "json",
+      "topic": "esp32/pub",
+      "timestamp": 1707901524859,
+      "payload": {
+        "Date": "4.02.2024",
+        "Horaire": "10.05.23",
+        "longitude": 1.475154667,
+        "latitude": 43.56494017,
+        "luminosité": 1463
+      },
+      "qos": 0
+    },
+    {
+      "format": "json",
+      "topic": "esp32/pub",
+      "timestamp": 1707901524739,
+      "payload": {
+        "Date": "4.02.2024",
+        "Horaire": "10.05.23",
+        "longitude": 1.475154667,
+        "latitude": 43.56494017,
+        "luminosité": 1314
+      },
+      "qos": 0
+    },
+    {
+      "format": "json",
+      "topic": "esp32/pub",
+      "timestamp": 1707901524621,
+      "payload": {
+        "Date": "4.02.2024",
+        "Horaire": "10.05.23",
+        "longitude": 1.475154667,
+        "latitude": 43.56494017,
+        "luminosité": 1303
+      },
+      "qos": 0
+    },
+    {
+      "format": "json",
+      "topic": "esp32/pub",
+      "timestamp": 1707901524538,
+      "payload": {
+        "Date": "4.02.2024",
+        "Horaire": "10.05.23",
+        "longitude": 1.475154667,
+        "latitude": 43.56494017,
+        "luminosité": 1133
+      },
+      "qos": 0
+    },
+    {
+      "format": "json",
+      "topic": "esp32/pub",
+      "timestamp": 1707901524431,
+      "payload": {
+        "Date": "4.02.2024",
+        "Horaire": "10.05.23",
+        "longitude": 1.475154667,
+        "latitude": 43.56494017,
+        "luminosité": 1447
+      },
+      "qos": 0
+    },
+    {
+      "format": "json",
+      "topic": "esp32/pub",
+      "timestamp": 1707901524318,
+      "payload": {
+        "Date": "4.02.2024",
+        "Horaire": "10.05.23",
+        "longitude": 1.475154667,
+        "latitude": 43.56494017,
+        "luminosité": 1407
+      },
+      "qos": 0
+    },
+    {
+      "format": "json",
+      "topic": "esp32/pub",
+      "timestamp": 1707901524226,
+      "payload": {
+        "Date": "4.02.2024",
+        "Horaire": "10.05.23",
+        "longitude": 1.475154667,
+        "latitude": 43.56494017,
+        "luminosité": 1783
+      },
+      "qos": 0
+    }
+  ]
+}
