@@ -11,6 +11,7 @@
 #include "Adafruit_VEML7700.h" //Light sensor
 #include "DFRobot_RainfallSensor.h" //Rainfall sensor
 #include "ATH20.h" //Temperature and air humidity sensor
+#include "Soil_Moisture_Sensor.h" //Soil humidity sensor
 
 
 #define AWS_IOT_PUBLISH_TOPIC "esp32/pub"
@@ -30,6 +31,8 @@ float pluie;
 float pluie_depuis;
 int basculement_total;
 float lux_value;
+int soil_moisture;
+int moisture_range; //-1:very wet, 0:wet,1:dry
 
 
 #define MODE_UART
@@ -37,6 +40,8 @@ float lux_value;
 SoftwareSerial mySerial(/*rx =*/16, /*tx =*/17);
 DFRobot_RainfallSensor_UART Sensor(/*Stream *=*/&mySerial);
 Adafruit_VEML7700 veml = Adafruit_VEML7700();
+SoilMoistureSensor soilSensor;
+
 #else //I2C communication
   DFRobot_RainfallSensor_I2C Sensor(&Wire);
 #endif
@@ -85,6 +90,8 @@ doc["Pluie tombée dans la dernière heure (mm)"] = pluie;
 doc["Pluie dans les dernières 24h (mm)"] = pluie_depuis;
 doc["Nombre de basculement depuis 1h"] = basculement_total;
 doc["Luminosité (lux)"] = lux_value;
+doc["Humidité relative du sol (valeur relative entre AirValue et WaterValue)"] = soil_moisture;
+doc["Plage d'humidité du sol (-1:Très mouillé, 0:Mouillé, 1:Sec)"] = moisture_range;
 char jsonBuffer[512];
 serializeJson(doc, jsonBuffer); // print to client
 client.publish(AWS_IOT_PUBLISH_TOPIC, jsonBuffer);
@@ -105,6 +112,7 @@ Serial.begin(115200);
 configTime(1*3600,0,"pool.ntp.org");
 connectAWS();
 ATH.begin();
+soilSensor.begin();
 
 #ifdef MODE_UART
   mySerial.begin(9600);
@@ -116,19 +124,37 @@ ATH.begin();
     Serial.println("Sensor init err!!!");
     delay(1000);
   }
-  while(!veml.begin()){
-    Serial.println("Light sensor init err!!!");
-    delay(1000);
-  }
   Serial.print("vid:\t");
   Serial.println(Sensor.vid,HEX);
   Serial.print("pid:\t");
   Serial.println(Sensor.pid,HEX);
   Serial.print("Version:\t");
   Serial.println(Sensor.getFirmwareVersion());
+
   //Set the accumulated rainfall value, unit: mm
   //Sensor.setRainAccumulatedValue();
 
+  while(!veml.begin()){
+    Serial.println("Light sensor init err!!!");
+    delay(1000);
+  }
+  Serial.print("Gain:\t");
+  switch (veml.getGain()) {
+    case VEML7700_GAIN_1: Serial.println("1"); break;
+    case VEML7700_GAIN_2: Serial.println("2"); break;
+    case VEML7700_GAIN_1_4: Serial.println("1/4"); break;
+    case VEML7700_GAIN_1_8: Serial.println("1/8"); break;
+  }
+
+  Serial.print("Integration Time (ms):\t");
+  switch (veml.getIntegrationTime()) {
+    case VEML7700_IT_25MS: Serial.println("25"); break;
+    case VEML7700_IT_50MS: Serial.println("50"); break;
+    case VEML7700_IT_100MS: Serial.println("100"); break;
+    case VEML7700_IT_200MS: Serial.println("200"); break;
+    case VEML7700_IT_400MS: Serial.println("400"); break;
+    case VEML7700_IT_800MS: Serial.println("800"); break;
+  }
   //Set the bit thresholds for the light sensor
   //veml.setLowThreshold(10000);
   //veml.setHighThreshold(20000);
@@ -187,6 +213,12 @@ if (irq & VEML7700_INTERRUPT_LOW) {
 if (irq & VEML7700_INTERRUPT_HIGH) {
   Serial.println("** High threshold");
 }
+
+soilSensor.getMoistureRange(&soil_moisture, &moisture_range);
+Serial.print("Soil humidity:\t");
+Serial.println(soil_moisture);
+Serial.print("Soil humidity range (-1:very wet, 0:wet,1:dry):\t");
+Serial.println(moisture_range);
 
 publishMessage();
 client.loop();
