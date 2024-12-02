@@ -4,10 +4,13 @@
 #include <ArduinoJson.h>
 #include "WiFi.h"
 #include <Wire.h>
-#include "ATH20.h"
 #include <SoftwareSerial.h>
-#include "DFRobot_RainfallSensor.h"
 #include "time.h"
+
+//Sensors libraries
+#include "Adafruit_VEML7700.h" //Light sensor
+#include "DFRobot_RainfallSensor.h" //Rainfall sensor
+#include "ATH20.h" //Temperature and air humidity sensor
 
 
 #define AWS_IOT_PUBLISH_TOPIC "esp32/pub"
@@ -26,11 +29,14 @@ float temp;
 float pluie;
 float pluie_depuis;
 int basculement_total;
+float lux_value;
+
 
 #define MODE_UART
 #ifdef MODE_UART //UART communication
 SoftwareSerial mySerial(/*rx =*/16, /*tx =*/17);
 DFRobot_RainfallSensor_UART Sensor(/*Stream *=*/&mySerial);
+Adafruit_VEML7700 veml = Adafruit_VEML7700();
 #else //I2C communication
   DFRobot_RainfallSensor_I2C Sensor(&Wire);
 #endif
@@ -78,6 +84,7 @@ doc["temperature(°C)"] = temp;
 doc["Pluie tombée dans la dernière heure (mm)"] = pluie;
 doc["Pluie dans les dernières 24h (mm)"] = pluie_depuis;
 doc["Nombre de basculement depuis 1h"] = basculement_total;
+doc["Luminosité (lux)"] = lux_value;
 char jsonBuffer[512];
 serializeJson(doc, jsonBuffer); // print to client
 client.publish(AWS_IOT_PUBLISH_TOPIC, jsonBuffer);
@@ -109,6 +116,10 @@ ATH.begin();
     Serial.println("Sensor init err!!!");
     delay(1000);
   }
+  while(!veml.begin()){
+    Serial.println("Light sensor init err!!!");
+    delay(1000);
+  }
   Serial.print("vid:\t");
   Serial.println(Sensor.vid,HEX);
   Serial.print("pid:\t");
@@ -117,6 +128,11 @@ ATH.begin();
   Serial.println(Sensor.getFirmwareVersion());
   //Set the accumulated rainfall value, unit: mm
   //Sensor.setRainAccumulatedValue();
+
+  //Set the bit thresholds for the light sensor
+  //veml.setLowThreshold(10000);
+  //veml.setHighThreshold(20000);
+  //veml.interruptEnable(true);
 }
 void loop()
 {
@@ -159,6 +175,18 @@ Serial.println(" mm");
 basculement_total = Sensor.getRawData();
 Serial.print("rainfall raw:\t");
 Serial.println(basculement_total);
+
+//Get the lux value
+lux_value = veml.readLux();
+Serial.print("Lux:\t");
+Serial.println(lux_value);
+uint16_t irq = veml.interruptStatus();
+if (irq & VEML7700_INTERRUPT_LOW) {
+  Serial.println("** Low threshold");
+}
+if (irq & VEML7700_INTERRUPT_HIGH) {
+  Serial.println("** High threshold");
+}
 
 publishMessage();
 client.loop();
