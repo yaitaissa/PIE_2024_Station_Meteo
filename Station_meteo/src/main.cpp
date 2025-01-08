@@ -36,7 +36,7 @@ float pluie_depuis;
 int basculement_total;
 float lux_value;
 int soil_moisture;
-int moisture_range; //-1:very wet, 0:wet,1:dry
+float humidity_purcentage; //0%: same humidity as air, 100%: same humidity as water
 
 // Create sensors objects
 Adafruit_VEML7700 veml = Adafruit_VEML7700();
@@ -95,7 +95,7 @@ void publishMessage()
   doc["Nombre de basculement depuis 1h"] = basculement_total;
   doc["Luminosité (lux)"] = lux_value;
   doc["Humidité relative du sol (valeur relative entre AirValue et WaterValue)"] = soil_moisture;
-  doc["Plage d'humidité du sol (-1:Très mouillé, 0:Mouillé, 1:Sec)"] = moisture_range;
+  doc["Pourcentage d'humidité du sol"] = humidity_purcentage;
   char jsonBuffer[512];
   serializeJson(doc, jsonBuffer); // print to client
   client.publish(AWS_IOT_PUBLISH_TOPIC, jsonBuffer);
@@ -223,11 +223,11 @@ void loop()
   }
 
   //Get the soil humidity 
-  soilSensor.getMoistureRange(&soil_moisture, &moisture_range);
+  soilSensor.getMoistureRange(&soil_moisture, &humidity_purcentage);
   Serial.print("Soil humidity:\t");
   Serial.println(soil_moisture);
-  Serial.print("Soil humidity range (-1:very wet, 0:wet,1:dry):\t");
-  Serial.println(moisture_range);
+  Serial.print("Soil humidity purcentage:\t");
+  Serial.println(humidity_purcentage);
 
   publishMessage();
   client.loop();

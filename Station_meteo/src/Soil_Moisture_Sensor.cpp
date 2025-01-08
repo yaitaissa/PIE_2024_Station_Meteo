@@ -20,23 +20,10 @@ bool SoilMoistureSensor::getMoisture(int *m)
 }
 
 
-bool SoilMoistureSensor::getMoistureRange(int *m, int *r)
+bool SoilMoistureSensor::getMoistureRange(int *m, float *r)
 {
     getMoisture(m);
-    int intervals = (AirValue - WaterValue)/3;
-
-    if(*m > WaterValue && *m < (WaterValue + intervals))
-    {
-        *r = -1; //Very wet
-    }
-    else if(*m > (WaterValue + intervals) && *m < (AirValue - intervals))
-    {
-        *r = 0; //Wet
-    }
-    else if(*m < AirValue && *m > (AirValue - intervals))
-    {
-        *r = 1; //Dry
-    }
+    *r = (1.0 - *m / AirValue) * 100;
 
     return 1;
 }

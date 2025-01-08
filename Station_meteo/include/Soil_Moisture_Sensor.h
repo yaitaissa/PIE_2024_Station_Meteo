@@ -13,7 +13,7 @@ public:
 
     void begin();
     bool getMoisture(int *m);
-    bool getMoistureRange(int *m, int *r);
+    bool getMoistureRange(int *m, float *r);
 };
 
 #endif
