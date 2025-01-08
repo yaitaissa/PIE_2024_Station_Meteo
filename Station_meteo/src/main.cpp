@@ -17,7 +17,6 @@
 #define AWS_IOT_PUBLISH_TOPIC "esp32/pub"
 #define AWS_IOT_SUBSCRIBE_TOPIC "esp32/sub"
 void messageHandler(char* topic, byte* payload, unsigned int length);
-ATH20 ATH;
 WiFiClientSecure net = WiFiClientSecure();
 PubSubClient client(net);
 
@@ -34,92 +33,93 @@ float lux_value;
 int soil_moisture;
 int moisture_range; //-1:very wet, 0:wet,1:dry
 
-
-#define MODE_UART
-#ifdef MODE_UART //UART communication
-SoftwareSerial mySerial(/*rx =*/16, /*tx =*/17);
-DFRobot_RainfallSensor_UART Sensor(/*Stream *=*/&mySerial);
+// Create sensors objects
 Adafruit_VEML7700 veml = Adafruit_VEML7700();
 SoilMoistureSensor soilSensor;
+ATH20 ATH;
+DFRobot_RainfallSensor_I2C Sensor(&Wire);
 
-#else //I2C communication
-  DFRobot_RainfallSensor_I2C Sensor(&Wire);
-#endif
-
-
+// Connect to AWS
 void connectAWS()
 {
-WiFi.mode(WIFI_STA);
-WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-Serial.println("Connecting to Wi-Fi");
-while (WiFi.status() != WL_CONNECTED)
-{
-delay(500);
-Serial.print(".");
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.println("Connecting to Wi-Fi");
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+
+  // Configure WiFiClientSecure to use the AWS IoT device credentials
+  net.setCACert(AWS_CERT_CA);
+  net.setCertificate(AWS_CERT_CRT);
+  net.setPrivateKey(AWS_CERT_PRIVATE);
+
+  // Connect to the MQTT broker on the AWS endpoint we defined earlier
+  client.setServer(AWS_IOT_ENDPOINT, 8883);
+
+  // Create a message handler
+  client.setCallback(messageHandler);
+  Serial.println("Connecting to AWS IOT");
+  while (!client.connect(THINGNAME))
+  {
+    Serial.print(".");
+    delay(100);
+  }
+  if (!client.connected())
+  {
+    Serial.println("AWS IoT Timeout!");
+    return;
+  }
+
+  // Subscribe to a topic
+  client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC);
+  Serial.println("AWS IoT Connected!");
 }
-// Configure WiFiClientSecure to use the AWS IoT device credentials
-net.setCACert(AWS_CERT_CA);
-net.setCertificate(AWS_CERT_CRT);
-net.setPrivateKey(AWS_CERT_PRIVATE);
-// Connect to the MQTT broker on the AWS endpoint we defined earlier
-client.setServer(AWS_IOT_ENDPOINT, 8883);
-// Create a message handler
-client.setCallback(messageHandler);
-Serial.println("Connecting to AWS IOT");
-while (!client.connect(THINGNAME))
-{
-Serial.print(".");
-delay(100);
-}
-if (!client.connected())
-{
-Serial.println("AWS IoT Timeout!");
-return;
-}
-// Subscribe to a topic
-client.subscribe(AWS_IOT_SUBSCRIBE_TOPIC);
-Serial.println("AWS IoT Connected!");
-}
+
+// Send a message to the server
 void publishMessage()
 {
-StaticJsonDocument<400> doc;
-doc["timestamp"]=timeDates;
-doc["humidity (%)"] =humi;
-doc["temperature(°C)"] = temp;
-doc["Pluie tombée dans la dernière heure (mm)"] = pluie;
-doc["Pluie dans les dernières 24h (mm)"] = pluie_depuis;
-doc["Nombre de basculement depuis 1h"] = basculement_total;
-doc["Luminosité (lux)"] = lux_value;
-doc["Humidité relative du sol (valeur relative entre AirValue et WaterValue)"] = soil_moisture;
-doc["Plage d'humidité du sol (-1:Très mouillé, 0:Mouillé, 1:Sec)"] = moisture_range;
-char jsonBuffer[512];
-serializeJson(doc, jsonBuffer); // print to client
-client.publish(AWS_IOT_PUBLISH_TOPIC, jsonBuffer);
+  StaticJsonDocument<400> doc;
+  doc["timestamp"]=timeDates;
+  doc["humidity (%)"] =humi;
+  doc["temperature(°C)"] = temp;
+  doc["Pluie tombée dans la dernière heure (mm)"] = pluie;
+  doc["Pluie dans les dernières 24h (mm)"] = pluie_depuis;
+  doc["Nombre de basculement depuis 1h"] = basculement_total;
+  doc["Luminosité (lux)"] = lux_value;
+  doc["Humidité relative du sol (valeur relative entre AirValue et WaterValue)"] = soil_moisture;
+  doc["Plage d'humidité du sol (-1:Très mouillé, 0:Mouillé, 1:Sec)"] = moisture_range;
+  char jsonBuffer[512];
+  serializeJson(doc, jsonBuffer); // print to client
+  client.publish(AWS_IOT_PUBLISH_TOPIC, jsonBuffer);
 }
+
+
 void messageHandler(char* topic, byte* payload, unsigned int length)
 {
-Serial.print("incoming: ");
-Serial.println(topic);
-StaticJsonDocument<200> doc;
-deserializeJson(doc, payload);
-const char* message = doc["message"];
-Serial.println(message);
+  Serial.print("incoming: ");
+  Serial.println(topic);
+  StaticJsonDocument<200> doc;
+  deserializeJson(doc, payload);
+  const char* message = doc["message"];
+  Serial.println(message);
 }
 
 void setup()
 {
-Serial.begin(115200);
-configTime(1*3600,0,"pool.ntp.org");
-connectAWS();
-ATH.begin();
-soilSensor.begin();
-
-#ifdef MODE_UART
-  mySerial.begin(9600);
-#endif 
   Serial.begin(9600);
+  configTime(1*3600,0,"pool.ntp.org");
+  connectAWS();
 
-  delay(1000);
+  // Initializing ATH sensor
+  ATH.begin();
+
+  // Initializing Soil Huimidity sensor
+  soilSensor.begin();
+
+  // Initializing Rainfall sensor
   while(!Sensor.begin()){
     Serial.println("Sensor init err!!!");
     delay(1000);
@@ -134,10 +134,12 @@ soilSensor.begin();
   //Set the accumulated rainfall value, unit: mm
   //Sensor.setRainAccumulatedValue();
 
+  // Initializing Lux sensor
   while(!veml.begin()){
     Serial.println("Light sensor init err!!!");
     delay(1000);
   }
+
   Serial.print("Gain:\t");
   switch (veml.getGain()) {
     case VEML7700_GAIN_1: Serial.println("1"); break;
@@ -160,67 +162,69 @@ soilSensor.begin();
   //veml.setHighThreshold(20000);
   //veml.interruptEnable(true);
 }
+
 void loop()
 {
 
-connectAWS();
+  connectAWS();
 
-struct tm timeinfo;
-if(!getLocalTime(&timeinfo)){
+  struct tm timeinfo;
+  if(!getLocalTime(&timeinfo)){
     Serial.println("Failed to obtain time");
-}else{
-//Serial.println(&timeinfo, "&A, %B %d %Y %H:%M:%S");
-strftime(timeDates, sizeof(timeDates), "%B %d %Y %H:%M:%S", &timeinfo); //&A, 
-Serial.println(timeDates);
-}
+  }else{
+    //Serial.println(&timeinfo, "&A, %B %d %Y %H:%M:%S");
+    strftime(timeDates, sizeof(timeDates), "%B %d %Y %H:%M:%S", &timeinfo); //&A, 
+    Serial.println(timeDates);
+  }
 
-int ret = ATH.getSensor(&humi, &temp);
-if(ret) // GET DATA OK
-{
-Serial.print("humidity: ");
-Serial.print(humi * 100);
-Serial.print("%\t temerature: ");
-Serial.println(temp);
-}
-else // GET DATA FAIL
-{
-Serial.println("GET DATA FROM ATH20 FAIL");
-}
+  int ret = ATH.getSensor(&humi, &temp);
+  if(ret) // GET DATA OK
+  {
+    Serial.print("humidity: ");
+    Serial.print(humi * 100);
+    Serial.print("%\t temerature: ");
+    Serial.println(temp);
+  }
+  else // GET DATA FAIL
+  {
+    Serial.println("GET DATA FROM ATH20 FAIL");
+  }
 
-//Get the accumulated rainfall during the sensor operating time
-pluie = Sensor.getRainfall();
-Serial.print("Quantité d'eau tombée pendant cette session:\t");
-Serial.print(pluie);
-Serial.println(" mm");
-//Get the accumulated rainfall in the past 1 hour (function parameter can be 1-24)
-pluie_depuis = Sensor.getRainfall(24);
-Serial.print("Quantité d'eau tombée dans les dernières 24h:\t");
-Serial.print(pluie_depuis);
-Serial.println(" mm");
-// Get the raw data, number of tipping bucket counts
-basculement_total = Sensor.getRawData();
-Serial.print("rainfall raw:\t");
-Serial.println(basculement_total);
+  //Get the accumulated rainfall during the sensor operating time
+  pluie = Sensor.getRainfall();
+  Serial.print("Quantité d'eau tombée pendant cette session:\t");
+  Serial.print(pluie);
+  Serial.println(" mm");
+  //Get the accumulated rainfall in the past 1 hour (function parameter can be 1-24)
+  pluie_depuis = Sensor.getRainfall(24);
+  Serial.print("Quantité d'eau tombée dans les dernières 24h:\t");
+  Serial.print(pluie_depuis);
+  Serial.println(" mm");
+  //Get the raw data, number of tipping bucket counts
+  basculement_total = Sensor.getRawData();
+  Serial.print("rainfall raw:\t");
+  Serial.println(basculement_total);
 
-//Get the lux value
-lux_value = veml.readLux();
-Serial.print("Lux:\t");
-Serial.println(lux_value);
-uint16_t irq = veml.interruptStatus();
-if (irq & VEML7700_INTERRUPT_LOW) {
-  Serial.println("** Low threshold");
-}
-if (irq & VEML7700_INTERRUPT_HIGH) {
-  Serial.println("** High threshold");
-}
+  //Get the lux value
+  lux_value = veml.readLux();
+  Serial.print("Lux:\t");
+  Serial.println(lux_value);
+  uint16_t irq = veml.interruptStatus();
+  if (irq & VEML7700_INTERRUPT_LOW) {
+    Serial.println("** Low threshold");
+  }
+  if (irq & VEML7700_INTERRUPT_HIGH) {
+    Serial.println("** High threshold");
+  }
 
-soilSensor.getMoistureRange(&soil_moisture, &moisture_range);
-Serial.print("Soil humidity:\t");
-Serial.println(soil_moisture);
-Serial.print("Soil humidity range (-1:very wet, 0:wet,1:dry):\t");
-Serial.println(moisture_range);
+  //Get the soil humidity 
+  soilSensor.getMoistureRange(&soil_moisture, &moisture_range);
+  Serial.print("Soil humidity:\t");
+  Serial.println(soil_moisture);
+  Serial.print("Soil humidity range (-1:very wet, 0:wet,1:dry):\t");
+  Serial.println(moisture_range);
 
-publishMessage();
-client.loop();
-delay((10 * 60 - 2.5) * 1000);
+  publishMessage();
+  client.loop();
+  delay((10 * 60 - 2.5) * 1000);
 }

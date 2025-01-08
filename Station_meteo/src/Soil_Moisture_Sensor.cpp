@@ -15,7 +15,7 @@ void SoilMoistureSensor::begin()
 
 bool SoilMoistureSensor::getMoisture(int *m)
 {
-    *m = analogRead(A0);
+    *m = analogRead(39);
     return 1;
 }
 
