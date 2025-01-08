@@ -1,3 +1,8 @@
+/*
+Ref for SD handling: https://www.upesy.fr/blogs/tutorials/upesy-microsd-module-quickstart-guide#
+*/
+
+
 #include "secrets.h"
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
