@@ -2,7 +2,6 @@
 Ref for SD handling: https://www.upesy.fr/blogs/tutorials/upesy-microsd-module-quickstart-guide#
 */
 
-
 #include "secrets.h"
 #include <WiFiClientSecure.h>
 #include <PubSubClient.h>
@@ -18,6 +17,11 @@ Ref for SD handling: https://www.upesy.fr/blogs/tutorials/upesy-microsd-module-q
 #include "ATH20.h" //Temperature and air humidity sensor
 #include "Soil_Moisture_Sensor.h" //Soil humidity sensor
 
+//SD card librairies
+#include "FS.h"
+#include "SD.h"
+#include "SPI.h"
+
 
 #define AWS_IOT_PUBLISH_TOPIC "esp32/pub"
 #define AWS_IOT_SUBSCRIBE_TOPIC "esp32/sub"
@@ -30,7 +34,6 @@ char timeDates[32];
 
 float humi ;
 float temp;
-
 float pluie;
 float pluie_depuis;
 int basculement_total;
@@ -112,6 +115,35 @@ void messageHandler(char* topic, byte* payload, unsigned int length)
   Serial.println(message);
 }
 
+void logToSD(const char *path, const char *message) {
+    File file = SD.open(path, FILE_APPEND);
+    if (!file) {
+        Serial.println("Failed to open file for appending");
+        return;
+    }
+    if (file.println(message)) {
+        Serial.println("Message logged to SD");
+    } else {
+        Serial.println("Failed to log message");
+    }
+    file.close();
+}
+
+void initializeLogFile(const char *path) {
+    if (!SD.exists(path)) {
+        File file = SD.open(path, FILE_WRITE);
+        if (file) {
+            file.println("Date, Humidity (%), Temperature (°C), Rain (mm), Cumulative Rain (mm), Total Tipping Count, Light (lux), Soil Moisture (%), Humidity Purcentage (%)");
+            Serial.println("Header added to log file");
+            file.close();
+        } else {
+            Serial.println("Failed to create log file");
+        }
+    }
+}
+
+
+
 void setup()
 {
   Serial.begin(9600);
@@ -166,6 +198,30 @@ void setup()
   //veml.setLowThreshold(10000);
   //veml.setHighThreshold(20000);
   //veml.interruptEnable(true);
+
+  if (!SD.begin(5)) { // Remplacez 5 par le pin CS si nécessaire
+        Serial.println("SD Card Mount Failed");
+        return;
+    }
+
+  uint8_t cardType = SD.cardType();
+  if (cardType == CARD_NONE) {
+      Serial.println("No SD card attached");
+      return;
+  }
+
+  Serial.print("SD Card Type: ");
+  if (cardType == CARD_MMC) Serial.println("MMC");
+  else if (cardType == CARD_SD) Serial.println("SDSC");
+  else if (cardType == CARD_SDHC) Serial.println("SDHC");
+  else Serial.println("UNKNOWN");
+
+  uint64_t cardSize = SD.cardSize() / (1024 * 1024);
+  Serial.printf("SD Card Size: %lluMB\n", cardSize);
+
+  // Initialiser le fichier avec l'en-tête si nécessaire
+  initializeLogFile("/sensor_data.txt");
+
 }
 
 void loop()
@@ -187,7 +243,7 @@ void loop()
   {
     Serial.print("humidity: ");
     Serial.print(humi * 100);
-    Serial.print("%\t temerature: ");
+    Serial.print("%\t temperature: ");
     Serial.println(temp);
   }
   else // GET DATA FAIL
@@ -229,7 +285,19 @@ void loop()
   Serial.print("Soil humidity purcentage:\t");
   Serial.println(humidity_purcentage);
 
-  publishMessage();
-  client.loop();
-  delay((10 * 60 - 2.5) * 1000);
+  //publishMessage();
+  //client.loop();
+
+
+  // Création d'une ligne de données
+  char logMessage[512];
+  snprintf(logMessage, sizeof(logMessage),
+            "%s, %.2f, %.2f, %.2f, %.2f, %d, %.2f, %d, %.2f",
+            timeDates, humi, temp, pluie, pluie_depuis, basculement_total,
+            lux_value, soil_moisture, humidity_purcentage);
+
+  // Écriture dans le fichier
+  logToSD("/sensor_data.txt", logMessage);
+
+  delay( 1000);
 }

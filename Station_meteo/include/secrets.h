@@ -3,8 +3,8 @@
 #define SECRET
 #define THINGNAME "Test_humidite_temperature" //change this
 
-const char WIFI_SSID[] = "HUAWEI P30"; //change this
-const char WIFI_PASSWORD[] = "tomti7676"; //change this
+const char WIFI_SSID[] = "iPhone de Lucie"; //change this
+const char WIFI_PASSWORD[] = "lucieeeg"; //change this
 const char AWS_IOT_ENDPOINT[] = "ae87uomkyz73q-ats.iot.eu-north-1.amazonaws.com"; //change this
 // Amazon Root CA 1
 static const char AWS_CERT_CA[] PROGMEM = R"EOF(

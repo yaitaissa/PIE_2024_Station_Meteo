@@ -4,8 +4,8 @@
 
 void SoilMoistureSensor::calibrateValues()
 {
-    SoilMoistureSensor::AirValue = 570; //Value to record in the air
-    SoilMoistureSensor::WaterValue  = 0; //Value to record in water
+    SoilMoistureSensor::AirValue = 3800.0; //Value to record in the air
+    SoilMoistureSensor::WaterValue  = 0.0; //Value to record in water
 }
 
 void SoilMoistureSensor::begin()
@@ -23,7 +23,7 @@ bool SoilMoistureSensor::getMoisture(int *m)
 bool SoilMoistureSensor::getMoistureRange(int *m, float *r)
 {
     getMoisture(m);
-    *r = (1.0 - *m / AirValue) * 100;
+    *r = (1.0 - *m / AirValue);
 
     return 1;
 }
