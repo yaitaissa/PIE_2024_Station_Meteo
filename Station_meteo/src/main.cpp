@@ -22,6 +22,7 @@ Ref for SD handling: https://www.upesy.fr/blogs/tutorials/upesy-microsd-module-q
 #include "SD.h"
 #include "SPI.h"
 
+#define ATH20_VERSION 1 // the version of the code to use for the Temperature and air humidity sensor (1 : ATH20, 0 : DFRobot_ATH20)
 
 #define AWS_IOT_PUBLISH_TOPIC "esp32/pub"
 #define AWS_IOT_SUBSCRIBE_TOPIC "esp32/sub"
@@ -44,7 +45,11 @@ float humidity_purcentage; //0%: same humidity as air, 100%: same humidity as wa
 // Create sensors objects
 Adafruit_VEML7700 veml = Adafruit_VEML7700();
 SoilMoistureSensor soilSensor;
-ATH20 ATH;
+#if ATH20_VERSION
+  ATH20 ATH;
+#else
+  DFRobot_AHT20 ATH;
+#endif
 DFRobot_RainfallSensor_I2C Sensor(&Wire);
 
 // Connect to AWS
@@ -152,7 +157,10 @@ void setup()
 
   // Initializing ATH sensor
   ATH.begin();
-
+  #if !ATH20_VERSION
+    ATH.reset();
+  #endif
+  
   // Initializing Soil Huimidity sensor
   soilSensor.begin();
 
@@ -237,8 +245,16 @@ void loop()
     strftime(timeDates, sizeof(timeDates), "%B %d %Y %H:%M:%S", &timeinfo); //&A, 
     Serial.println(timeDates);
   }
+  int ret;
 
-  int ret = ATH.getSensor(&humi, &temp);
+  #if ATH20_VERSION
+    ret = ATH.getSensor(&humi, &temp);
+  #else
+    ret = ATH.startMeasurementReady();
+    humi = ATH.getHumidity_RH();
+    temp = ATH.getTemperature_C();
+  #endif
+
   if(ret) // GET DATA OK
   {
     Serial.print("humidity: ");
