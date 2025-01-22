@@ -1,9 +1,8 @@
 #ifndef __ATH20_H__
 #define __ATH20_H__
 
-#if defined(ARDUINO) && (ARDUINO >= 100)
 #include <Arduino.h>
-#else
+#if !(defined(ARDUINO) && (ARDUINO >= 100))
 #include <WProgram.h>
 #endif
 
@@ -22,6 +21,7 @@ public:
     bool getHumidity(float *h);
 };
 
+// DFRobot_ATH20 ARDUINO LIBRARY
 class DFRobot_AHT20{
 public:
   /**

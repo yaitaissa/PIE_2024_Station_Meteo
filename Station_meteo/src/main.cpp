@@ -18,9 +18,7 @@ Ref for SD handling: https://www.upesy.fr/blogs/tutorials/upesy-microsd-module-q
 #include "Soil_Moisture_Sensor.h" //Soil humidity sensor
 
 //SD card librairies
-#include "FS.h"
-#include "SD.h"
-#include "SPI.h"
+#include "SD_Handler.h"
 
 #define ATH20_VERSION 1 // the version of the code to use for the Temperature and air humidity sensor (1 : ATH20, 0 : DFRobot_ATH20)
 
@@ -119,34 +117,6 @@ void messageHandler(char* topic, byte* payload, unsigned int length)
   const char* message = doc["message"];
   Serial.println(message);
 }
-
-void logToSD(const char *path, const char *message) {
-    File file = SD.open(path, FILE_APPEND);
-    if (!file) {
-        Serial.println("Failed to open file for appending");
-        return;
-    }
-    if (file.println(message)) {
-        Serial.println("Message logged to SD");
-    } else {
-        Serial.println("Failed to log message");
-    }
-    file.close();
-}
-
-void initializeLogFile(const char *path) {
-    if (!SD.exists(path)) {
-        File file = SD.open(path, FILE_WRITE);
-        if (file) {
-            file.println("Date, Humidity (%), Temperature (°C), Rain (mm), Cumulative Rain (mm), Total Tipping Count, Light (lux), Soil Moisture (%), Humidity Purcentage (%)");
-            Serial.println("Header added to log file");
-            file.close();
-        } else {
-            Serial.println("Failed to create log file");
-        }
-    }
-}
-
 
 
 void setup()
