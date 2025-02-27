@@ -14,12 +14,17 @@ void logToSD(const char *path, const char *message) {
     file.close();
 }
 
-void initializeLogFile(const char *path) {
+void initializeLogFile(const char *path, int station_type) {
     // Checking if the file exists
     if (!SD.exists(path)) {
         File file = SD.open(path, FILE_WRITE);
         if (file) {
-            file.println("Date, Humidity (%), Temperature (°C), Rain (mm), Cumulative Rain (mm), Total Tipping Count, Light (lux), Soil Moisture (%), Humidity Purcentage (%)");
+            if(station_type){
+                file.println("Date, Humidity (%), Temperature (°C), Rain (mm), Cumulative Rain (mm), Total Tipping Count, Light (lux), Soil Moisture (%), Humidity Purcentage (%)");
+            }
+            else{
+                file.println("Date, Humidity (%), Temperature (°C), Soil Moisture (%), Humidity Purcentage (%)");
+            }
             Serial.println("Header added to log file");
             file.close();
         } else {

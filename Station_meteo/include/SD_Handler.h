@@ -23,4 +23,4 @@ void logToSD(const char *path, const char *message);
    * @n Otherwise, the file will be created
    * @return None
    */
-void initializeLogFile(const char *path);
+void initializeLogFile(const char *path, int station_type);
