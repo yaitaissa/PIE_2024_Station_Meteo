@@ -133,7 +133,7 @@ void initializeLogFile(const char *path) {
     if (!SD.exists(path)) {
         File file = SD.open(path, FILE_WRITE);
         if (file) {
-            file.println("Date, Humidity (%), Temperature (°C), Rain (mm), Cumulative Rain (mm), Total Tipping Count, Light (lux), Soil Moisture (%), Humidity Purcentage (%)");
+            file.println("Date, Humidity (%), Temperature (°C), Rain (mm), Cumulative Rain (mm), Total Tipping Count, Light (lux), Soil Moisture, Humidity Purcentage (%)");
             Serial.println("Header added to log file");
             file.close();
         } else {
@@ -157,10 +157,10 @@ void setup()
   soilSensor.begin();
 
   // Initializing Rainfall sensor
-  while(!Sensor.begin()){
-    Serial.println("Sensor init err!!!");
-    delay(1000);
-  }
+  // while(!Sensor.begin()){
+  //   Serial.println("Sensor init err!!!");
+  //   delay(1000);
+  // }
   Serial.print("vid:\t");
   Serial.println(Sensor.vid,HEX);
   Serial.print("pid:\t");
@@ -172,28 +172,28 @@ void setup()
   //Sensor.setRainAccumulatedValue();
 
   // Initializing Lux sensor
-  while(!veml.begin()){
-    Serial.println("Light sensor init err!!!");
-    delay(1000);
-  }
+  //while(!veml.begin()){
+  //  Serial.println("Light sensor init err!!!");
+  //  delay(1000);
+  //}
 
-  Serial.print("Gain:\t");
-  switch (veml.getGain()) {
-    case VEML7700_GAIN_1: Serial.println("1"); break;
-    case VEML7700_GAIN_2: Serial.println("2"); break;
-    case VEML7700_GAIN_1_4: Serial.println("1/4"); break;
-    case VEML7700_GAIN_1_8: Serial.println("1/8"); break;
-  }
+  //Serial.print("Gain:\t");
+  //switch (veml.getGain()) {
+  //  case VEML7700_GAIN_1: Serial.println("1"); break;
+  //  case VEML7700_GAIN_2: Serial.println("2"); break;
+  //  case VEML7700_GAIN_1_4: Serial.println("1/4"); break;
+  //  case VEML7700_GAIN_1_8: Serial.println("1/8"); break;
+  //}
 
-  Serial.print("Integration Time (ms):\t");
-  switch (veml.getIntegrationTime()) {
-    case VEML7700_IT_25MS: Serial.println("25"); break;
-    case VEML7700_IT_50MS: Serial.println("50"); break;
-    case VEML7700_IT_100MS: Serial.println("100"); break;
-    case VEML7700_IT_200MS: Serial.println("200"); break;
-    case VEML7700_IT_400MS: Serial.println("400"); break;
-    case VEML7700_IT_800MS: Serial.println("800"); break;
-  }
+  //Serial.print("Integration Time (ms):\t");
+  //switch (veml.getIntegrationTime()) {
+  //  case VEML7700_IT_25MS: Serial.println("25"); break;
+  //  case VEML7700_IT_50MS: Serial.println("50"); break;
+  //  case VEML7700_IT_100MS: Serial.println("100"); break;
+  //  case VEML7700_IT_200MS: Serial.println("200"); break;
+  //  case VEML7700_IT_400MS: Serial.println("400"); break;
+  //  case VEML7700_IT_800MS: Serial.println("800"); break;
+  //}
   //Set the bit thresholds for the light sensor
   //veml.setLowThreshold(10000);
   //veml.setHighThreshold(20000);
@@ -252,31 +252,31 @@ void loop()
   }
 
   //Get the accumulated rainfall during the sensor operating time
-  pluie = Sensor.getRainfall();
-  Serial.print("Quantité d'eau tombée pendant cette session:\t");
-  Serial.print(pluie);
-  Serial.println(" mm");
-  //Get the accumulated rainfall in the past 1 hour (function parameter can be 1-24)
-  pluie_depuis = Sensor.getRainfall(24);
-  Serial.print("Quantité d'eau tombée dans les dernières 24h:\t");
-  Serial.print(pluie_depuis);
-  Serial.println(" mm");
-  //Get the raw data, number of tipping bucket counts
-  basculement_total = Sensor.getRawData();
-  Serial.print("rainfall raw:\t");
-  Serial.println(basculement_total);
+  // pluie = Sensor.getRainfall();
+  // Serial.print("Quantité d'eau tombée pendant cette session:\t");
+  // Serial.print(pluie);
+  // Serial.println(" mm");
+  // //Get the accumulated rainfall in the past 1 hour (function parameter can be 1-24)
+  // pluie_depuis = Sensor.getRainfall(24);
+  // Serial.print("Quantité d'eau tombée dans les dernières 24h:\t");
+  // Serial.print(pluie_depuis);
+  // Serial.println(" mm");
+  // //Get the raw data, number of tipping bucket counts
+  // basculement_total = Sensor.getRawData();
+  // Serial.print("rainfall raw:\t");
+  // Serial.println(basculement_total);
 
   //Get the lux value
-  lux_value = veml.readLux();
-  Serial.print("Lux:\t");
-  Serial.println(lux_value);
-  uint16_t irq = veml.interruptStatus();
-  if (irq & VEML7700_INTERRUPT_LOW) {
-    Serial.println("** Low threshold");
-  }
-  if (irq & VEML7700_INTERRUPT_HIGH) {
-    Serial.println("** High threshold");
-  }
+  //lux_value = veml.readLux();
+  //Serial.print("Lux:\t");
+  //Serial.println(lux_value);
+  //uint16_t irq = veml.interruptStatus();
+  //if (irq & VEML7700_INTERRUPT_LOW) {
+  //  Serial.println("** Low threshold");
+  //}
+  //if (irq & VEML7700_INTERRUPT_HIGH) {
+  //  Serial.println("** High threshold");
+  //}
 
   //Get the soil humidity 
   soilSensor.getMoistureRange(&soil_moisture, &humidity_purcentage);
@@ -291,10 +291,15 @@ void loop()
 
   // Création d'une ligne de données
   char logMessage[512];
+  // snprintf(logMessage, sizeof(logMessage),
+  //           "%s, %f, %f, %f, %f, %d, %f, %d, %f",
+  //           timeDates, humi, temp, pluie, pluie_depuis, basculement_total,
+  //           lux_value, soil_moisture, humidity_purcentage);
+
   snprintf(logMessage, sizeof(logMessage),
-            "%s, %.2f, %.2f, %.2f, %.2f, %d, %.2f, %d, %.2f",
-            timeDates, humi, temp, pluie, pluie_depuis, basculement_total,
-            lux_value, soil_moisture, humidity_purcentage);
+            "%s, %f, %f,%f, %d, %f",
+            timeDates, humi, temp, lux_value,
+            soil_moisture, humidity_purcentage);
 
   // Écriture dans le fichier
   logToSD("/sensor_data.txt", logMessage);
