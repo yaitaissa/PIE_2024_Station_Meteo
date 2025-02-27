@@ -11,6 +11,7 @@ public:
     int AirValue;
     int WaterValue;
 
+    SoilMoistureSensor(); // Constructeur
     void begin();
     bool getMoisture(int *m);
     bool getMoistureRange(int *m, float *r);
