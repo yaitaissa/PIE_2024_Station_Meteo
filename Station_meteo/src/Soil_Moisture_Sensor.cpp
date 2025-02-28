@@ -2,10 +2,15 @@
 #include "Soil_Moisture_Sensor.h"
 #include <ArduinoJson.h>
 
+SoilMoistureSensor::SoilMoistureSensor()
+{
+    calibrateValues();
+}
+
 void SoilMoistureSensor::calibrateValues()
 {
-    SoilMoistureSensor::AirValue = 3800.0; //Value to record in the air
-    SoilMoistureSensor::WaterValue  = 0.0; //Value to record in water
+    SoilMoistureSensor::AirValue = 3590; //Value to record in the air
+    SoilMoistureSensor::WaterValue  = 240; //Value to record in water
 }
 
 void SoilMoistureSensor::begin()
@@ -23,7 +28,10 @@ bool SoilMoistureSensor::getMoisture(int *m)
 bool SoilMoistureSensor::getMoistureRange(int *m, float *r)
 {
     getMoisture(m);
-    *r = (1.0 - *m / AirValue);
+    *r = 100.0f * (static_cast<float>(AirValue) - static_cast<float>(*m)) / (static_cast<float>(AirValue) - static_cast<float>(WaterValue));
+
+    if (*r < 0.0f) *r = 0.0f;
+    if (*r > 100.0f) *r = 100.0f;
 
     return 1;
 }
