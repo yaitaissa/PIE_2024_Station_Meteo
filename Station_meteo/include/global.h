@@ -13,7 +13,7 @@
 #define ATH20_VERSION 1 // Version of the code to use for the Temperature and air humidity sensor (1 : ATH20, 0 : DFRobot_ATH20)
 #define GREENGUARD 0    // Version of the station
 
-#define PSEUDO_PERIOD 1 // Delay between two measures (s)
+#define PSEUDO_PERIOD 60 // Delay between two measures (s)
 
 #define AWS_IOT_PUBLISH_TOPIC "esp32/pub"
 #define AWS_IOT_SUBSCRIBE_TOPIC "esp32/sub"

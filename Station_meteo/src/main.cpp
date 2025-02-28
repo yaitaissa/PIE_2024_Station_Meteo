@@ -258,8 +258,8 @@ void loop()
     }
   #endif
 
-  publishMessage();
-  client.loop();
+  //publishMessage();
+  //client.loop();
 
 
   // Création d'une ligne de données
@@ -271,7 +271,7 @@ void loop()
               lux_value, soil_moisture, humidity_purcentage);
   #else
     snprintf(logMessage, sizeof(logMessage),
-              "%s, %f, %f,%f, %d, %f",
+              "%s, %f, %f, %d, %f",
               timeDates, humi, temp,
               soil_moisture, humidity_purcentage);
   #endif
