@@ -271,8 +271,8 @@ void loop()
   Serial.print("Soil humidity purcentage:\t");
   Serial.println(humidity_purcentage);
 
-  //publishMessage();
-  //client.loop();
+  publishMessage();
+  client.loop();
 
 
   // Création d'une ligne de données
