@@ -10,7 +10,7 @@
 #include <SoftwareSerial.h>
 #include "time.h"
 
-#define ATH20_VERSION 0 // Version of the code to use for the Temperature and air humidity sensor (1 : ATH20, 0 : DFRobot_ATH20)
+#define ATH20_VERSION 1 // Version of the code to use for the Temperature and air humidity sensor (1 : ATH20, 0 : DFRobot_ATH20)
 #define GREENGUARD 0    // Version of the station
 
 #define PSEUDO_PERIOD 1 // Delay between two measures (s)
@@ -23,6 +23,8 @@ PubSubClient client(net);
 
 char timeDates[32];
 
+struct tm timeinfo;
+time_t seconds;
 
 float humi ;
 float temp;

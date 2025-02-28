@@ -100,6 +100,8 @@ void setup()
   Serial.begin(9600);
   configTime(1*3600,0,"pool.ntp.org");
   connectAWS();
+  while(!getLocalTime(&timeinfo));
+  time(&seconds);
 
   // Initializing ATH sensor
   ATH.begin();
@@ -183,16 +185,20 @@ void setup()
 void loop()
 {
 
-  connectAWS();
-
-  struct tm timeinfo;
+  //connectAWS();
   if(!getLocalTime(&timeinfo)){
-    Serial.println("Failed to obtain time");
+    seconds = time(NULL);
+    struct tm * temp_timeinfo = localtime(&seconds);
+    strftime(timeDates, sizeof(timeDates), "%B %d %Y %H:%M:%S", temp_timeinfo);
   }else{
     //Serial.println(&timeinfo, "&A, %B %d %Y %H:%M:%S");
     strftime(timeDates, sizeof(timeDates), "%B %d %Y %H:%M:%S", &timeinfo); //&A, 
-    Serial.println(timeDates);
+    
   }
+  Serial.println(timeDates);
+  
+  
+
   int ret;
 
   #if ATH20_VERSION
