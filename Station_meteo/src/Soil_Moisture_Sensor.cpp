@@ -1,25 +1,30 @@
-// ATH20 ARDUINO LIBRARY
+// Soil humidity sensor librairy
 #include "Soil_Moisture_Sensor.h"
 #include <ArduinoJson.h>
 
-SoilMoistureSensor::SoilMoistureSensor()
+SoilMoistureSensor::SoilMoistureSensor(int Air=3590, int Water=0)
 {
-    calibrateValues();
+    calibrateValues(Air, Water);
 }
 
-void SoilMoistureSensor::calibrateValues()
+void SoilMoistureSensor::calibrateValues(int Air, int Water)
 {
-    SoilMoistureSensor::AirValue = 3590; //Value to record in the air
-    SoilMoistureSensor::WaterValue  = 240; //Value to record in water
+    // Set the values 
+    SoilMoistureSensor::AirValue = Air;
+    SoilMoistureSensor::WaterValue  = Water;
 }
 
 void SoilMoistureSensor::begin()
 {
-    calibrateValues();
+    // Ensure that Airvalue > WaterValue
+    if(AirValue <= WaterValue){
+        AirValue = WaterValue + 1;
+    }
 }
 
 bool SoilMoistureSensor::getMoisture(int *m)
 {
+    // Read the data
     *m = analogRead(39);
     return 1;
 }
@@ -27,7 +32,10 @@ bool SoilMoistureSensor::getMoisture(int *m)
 
 bool SoilMoistureSensor::getMoistureRange(int *m, float *r)
 {
+    // Read the data
     getMoisture(m);
+
+    // Compute the percentage
     *r = 100.0f * (static_cast<float>(AirValue) - static_cast<float>(*m)) / (static_cast<float>(AirValue) - static_cast<float>(WaterValue));
 
     if (*r < 0.0f) *r = 0.0f;

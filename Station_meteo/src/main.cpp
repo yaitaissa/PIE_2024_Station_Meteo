@@ -1,23 +1,23 @@
-/*
-Ref for SD handling: https://www.upesy.fr/blogs/tutorials/upesy-microsd-module-quickstart-guide#
-*/
+// Global librairy with declarations
 #include "global.h"
 
-//Sensors libraries
-#include "Adafruit_VEML7700.h" //Light sensor
-#include "DFRobot_RainfallSensor.h" //Rainfall sensor
+// Sensors libraries
+#if GREENGUARD
+  #include "Adafruit_VEML7700.h" //Light sensor
+  #include "DFRobot_RainfallSensor.h" //Rainfall sensor
+#endif
 #include "ATH20.h" //Temperature and air humidity sensor
 #include "Soil_Moisture_Sensor.h" //Soil humidity sensor
 
-//SD card librairies
+// SD card librairy
 #include "SD_Handler.h"
 
 // Create sensors objects
-#if GREENGUARD
+#if GREENGUARD // If the station is a GREENGUARD, create the lux sensor and rainfall sensor objects
   Adafruit_VEML7700 veml = Adafruit_VEML7700();
   DFRobot_RainfallSensor_I2C Sensor(&Wire);
 #endif
-#if ATH20_VERSION
+#if ATH20_VERSION // Create the ATH sensor according to it's version
   ATH20 ATH;
 #else
   DFRobot_AHT20 ATH;
@@ -27,6 +27,7 @@ SoilMoistureSensor soilSensor;
 // Connect to AWS
 void connectAWS()
 {
+  // Connect to WiFi
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.println("Connecting to Wi-Fi");
@@ -94,26 +95,28 @@ void messageHandler(char* topic, byte* payload, unsigned int length)
   Serial.println(message);
 }
 
-
+// Initialization function
 void setup()
 {
   Serial.begin(9600);
   configTime(1*3600,0,"pool.ntp.org");
+  
+  // Connect to the Internet and initialize the <time.h> librairy
   connectAWS();
   while(!getLocalTime(&timeinfo));
   time(&seconds);
 
-  // Initializing ATH sensor
+  // Initialize ATH sensor
   ATH.begin();
   #if !ATH20_VERSION
     ATH.reset();
   #endif
   
-  // Initializing Soil Huimidity sensor
+  // Initialize Soil Huimidity sensor
   soilSensor.begin();
 
   #if GREENGUARD
-    // Initializing Rainfall sensor
+    // Initialize Rainfall sensor
     while(!Sensor.begin()){
       Serial.println("Sensor init err!!!");
       delay(1000);
@@ -128,12 +131,13 @@ void setup()
     //Set the accumulated rainfall value, unit: mm
     Sensor.setRainAccumulatedValue();
 
-    // Initializing Lux sensor
+    // Initialize Lux sensor
     while(!veml.begin()){
       Serial.println("Light sensor init err!!!");
       delay(1000);
     }
 
+    // Print the gain of the sensor
     Serial.print("Gain:\t");
     switch (veml.getGain()) {
       case VEML7700_GAIN_1: Serial.println("1"); break;
@@ -142,6 +146,8 @@ void setup()
       case VEML7700_GAIN_1_8: Serial.println("1/8"); break;
     }
 
+    // Print the integration time of the sensor
+    // (the time over which the sensor takes the measurement)
     Serial.print("Integration Time (ms):\t");
     switch (veml.getIntegrationTime()) {
       case VEML7700_IT_25MS: Serial.println("25"); break;
@@ -151,56 +157,56 @@ void setup()
       case VEML7700_IT_400MS: Serial.println("400"); break;
       case VEML7700_IT_800MS: Serial.println("800"); break;
     }
-    //Set the bit thresholds for the light sensor
+
+    // Set the bit thresholds for the light sensor
     veml.setLowThreshold(10000);
     veml.setHighThreshold(20000);
     veml.interruptEnable(true);
   #endif
 
-  if (!SD.begin(5)) { // Remplacez 5 par le pin CS si nécessaire
+  // Mount the SD card
+  if (!SD.begin(5)) {
         Serial.println("SD Card Mount Failed");
         return;
     }
 
+  // Check the presence of an SD card
   uint8_t cardType = SD.cardType();
   if (cardType == CARD_NONE) {
       Serial.println("No SD card attached");
       return;
   }
 
+  // Print the type of SD card
   Serial.print("SD Card Type: ");
   if (cardType == CARD_MMC) Serial.println("MMC");
   else if (cardType == CARD_SD) Serial.println("SDSC");
   else if (cardType == CARD_SDHC) Serial.println("SDHC");
   else Serial.println("UNKNOWN");
 
+  // Print the size of the SD card
   uint64_t cardSize = SD.cardSize() / (1024 * 1024);
   Serial.printf("SD Card Size: %lluMB\n", cardSize);
 
-  // Initialiser le fichier avec l'en-tête si nécessaire
+  // Initialize the file
   initializeLogFile("/sensor_data.txt", GREENGUARD);
-
 }
 
 void loop()
 {
-
-  //connectAWS();
+  // Try to get the time
   if(!getLocalTime(&timeinfo)){
+    // If failure, use the <time.h> librairy to get the time and transform it into a date
     seconds = time(NULL);
     struct tm * temp_timeinfo = localtime(&seconds);
     strftime(timeDates, sizeof(timeDates), "%B %d %Y %H:%M:%S", temp_timeinfo);
   }else{
-    //Serial.println(&timeinfo, "&A, %B %d %Y %H:%M:%S");
+    // If succes, directly get the date 
     strftime(timeDates, sizeof(timeDates), "%B %d %Y %H:%M:%S", &timeinfo); //&A, 
-    
   }
   Serial.println(timeDates);
-  
-  
 
-  int ret;
-
+  // Get the temperature and air humidity measurement
   #if ATH20_VERSION
     ret = ATH.getSensor(&humi, &temp);
     humi = humi*100;
@@ -210,19 +216,19 @@ void loop()
     temp = ATH.getTemperature_C();
   #endif
 
-  if(ret) // GET DATA OK
+  if(ret) // If measurement successfully done, print it
   {
     Serial.print("humidity: ");
     Serial.print(humi);
     Serial.print("%\t temperature: ");
     Serial.println(temp);
   }
-  else // GET DATA FAIL
+  else // Else, notify the operator
   {
     Serial.println("GET DATA FROM ATH20 FAIL");
   }
 
-  //Get the soil humidity 
+  //Get the soil humidity measurement and print it
   soilSensor.getMoistureRange(&soil_moisture, &humidity_purcentage);
   Serial.print("Soil humidity:\t");
   Serial.println(soil_moisture);
@@ -249,7 +255,7 @@ void loop()
     lux_value = veml.readLux();
     Serial.print("Lux:\t");
     Serial.println(lux_value);
-    uint16_t irq = veml.interruptStatus();
+    irq = veml.interruptStatus();
     if (irq & VEML7700_INTERRUPT_LOW) {
       Serial.println("** Low threshold");
     }
@@ -258,11 +264,7 @@ void loop()
     }
   #endif
 
-  //publishMessage();
-  //client.loop();
-
-
-  // Création d'une ligne de données
+  // Create a data line to store
   char logMessage[512];
   #if GREENGUARD
     snprintf(logMessage, sizeof(logMessage),
@@ -276,8 +278,9 @@ void loop()
               soil_moisture, humidity_purcentage);
   #endif
 
-  // Écriture dans le fichier
+  // Write the data line in the file
   logToSD("/sensor_data.txt", logMessage);
 
+  // Wait before next measurement
   delay(PSEUDO_PERIOD*1000);
 }
