@@ -10,7 +10,7 @@ Il contient plusieurs fichiers:
 
 **Installation**
 
-L'ensemble des bibliothèques python suivantes est ,écessaire pour utiliser ce code:
+L'ensemble des bibliothèques Python suivantes sont nécessaire pour utiliser ce code:
 - numpy
 - pandas
 - matplotlib

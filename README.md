@@ -2,7 +2,18 @@
 
 ### Context
 
+Neusta France souhaite contribuer à la recherche et au développement en proposant son expertise en architecture cloud et transfert/stockage de données pour monter un projet PIE avec l'ISAE. L'objectif du projet GreenGuard est de développer un démonstrateur d'un cas d'usage écologique et académique en mettant en place une infrastructure de surveillance environnementale avec des capteurs connectés et un réseau maillé.
+
 ### Objectifs
+
+Le projet GreenGuard vise à développer une infrastructure de surveillance environnementale avancée sur le campus universitaire pour les besoins suivants :
+
+Surveiller la qualité de l'air pour assurer un environnement sain.
+Suivre les conditions météorologiques pour faciliter la planification des activités extérieures.
+Contrôler l'éclairage pour optimiser l'utilisation de la lumière naturelle.
+Gérer l'énergie de manière durable en mesurant la consommation d'énergie.
+Suivre la biodiversité pour contribuer à la conservation des espèces.
+Gérer les ressources en eau pour une utilisation optimale.
 
 ### Fonctionnnement hors ligne
 
