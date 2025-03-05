@@ -8,11 +8,8 @@ Neusta France souhaite contribuer à la recherche et au développement en propos
 
 Le projet GreenGuard vise à développer une infrastructure de surveillance environnementale avancée sur le campus universitaire pour les besoins suivants :
 
-Surveiller la qualité de l'air pour assurer un environnement sain.
 Suivre les conditions météorologiques pour faciliter la planification des activités extérieures.
 Contrôler l'éclairage pour optimiser l'utilisation de la lumière naturelle.
-Gérer l'énergie de manière durable en mesurant la consommation d'énergie.
-Suivre la biodiversité pour contribuer à la conservation des espèces.
 Gérer les ressources en eau pour une utilisation optimale.
 
 ### Fonctionnnement hors ligne
