@@ -25,7 +25,7 @@ public:
      * @param Air Value measured in the air
      * @param Water Value measured in water
      */
-    SoilMoistureSensor(int Air=3590, int Water=0); 
+    SoilMoistureSensor(int Air=3590, int Water=240); 
 
     /**
      * @fn begin
