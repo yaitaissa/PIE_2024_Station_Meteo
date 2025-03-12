@@ -2,7 +2,7 @@
 #include "Soil_Moisture_Sensor.h"
 #include <ArduinoJson.h>
 
-SoilMoistureSensor::SoilMoistureSensor(int Air=3590, int Water=0)
+SoilMoistureSensor::SoilMoistureSensor(int Air=3590, int Water=240)
 {
     calibrateValues(Air, Water);
 }
